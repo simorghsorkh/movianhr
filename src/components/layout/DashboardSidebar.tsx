@@ -137,6 +137,20 @@ export function DashboardSidebar() {
 
       {/* Bottom actions */}
       <div className="px-3 py-3 border-t border-gray-100 space-y-0.5">
+        <Link
+          href="/dashboard/settings"
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+            isRTL ? 'flex-row-reverse' : '',
+            pathname === '/dashboard/settings'
+              ? 'bg-primary-50 text-primary-700 font-semibold'
+              : 'text-gray-600 hover:bg-gray-50'
+          )}
+        >
+          <Settings size={18} className={cn('flex-shrink-0', pathname === '/dashboard/settings' ? 'text-primary-600' : 'text-gray-400')} />
+          <span>{t('settings')}</span>
+        </Link>
         <button
           onClick={() => setLang(lang === 'fa' ? 'en' : 'fa')}
           className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors', isRTL ? 'flex-row-reverse' : '')}
