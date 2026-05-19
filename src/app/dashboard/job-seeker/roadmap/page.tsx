@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, BookOpen, Award, Briefcase, Zap, Clock } from 'lucide-react';
+import { CheckCircle, Circle, BookOpen, Award, Briefcase, Zap, Clock, Plus, Trash2 } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -9,10 +9,11 @@ import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Input, Textarea, Select } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Progress } from '@/components/ui/Progress';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { getRoadmapItems, toggleRoadmapItem } from '@/lib/supabase/dal';
+import { getRoadmapItems, toggleRoadmapItem, addRoadmapItem, deleteRoadmapItem } from '@/lib/supabase/dal';
 import { cn } from '@/lib/utils';
 
 const categoryIcon = (cat: string) => {
@@ -29,6 +30,14 @@ const priorityVariant = (p: string): 'danger' | 'warning' | 'default' => {
   return p === 'high' ? 'danger' : p === 'medium' ? 'warning' : 'default';
 };
 
+const EMPTY_FORM = {
+  title: '',
+  description: '',
+  category: 'skill',
+  priority: 'medium',
+  estimated_time: '',
+};
+
 export default function RoadmapPage() {
   const { t, isRTL } = useLang();
   const { user } = useAuth();
@@ -37,6 +46,11 @@ export default function RoadmapPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+
+  // Modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -56,16 +70,51 @@ export default function RoadmapPage() {
   const toggleComplete = async (id: string) => {
     const item = items.find(i => i.id === id);
     const willComplete = !item?.completed;
-    // Optimistic update
     setItems(prev => prev.map(i => i.id === id ? { ...i, completed: willComplete } : i));
     try {
       await toggleRoadmapItem(id, willComplete);
       if (willComplete) toast.success(`"${item?.title}" marked as complete! 🎉`);
       else toast.info(`"${item?.title}" marked as pending.`);
     } catch {
-      // Revert on failure
       setItems(prev => prev.map(i => i.id === id ? { ...i, completed: !willComplete } : i));
       toast.error('Failed to update item.');
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!user || !form.title.trim()) return;
+    setSaving(true);
+    try {
+      const saved = await addRoadmapItem({
+        profile_id: user.id,
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        category: form.category,
+        priority: form.priority,
+        estimated_time: form.estimated_time.trim() || null,
+        completed: false,
+        sort_order: items.length,
+      });
+      setItems(prev => [...prev, saved]);
+      setModalOpen(false);
+      setForm({ ...EMPTY_FORM });
+      toast.success('Milestone added to your roadmap!');
+    } catch {
+      toast.error('Failed to add milestone.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const item = items.find(i => i.id === id);
+    setItems(prev => prev.filter(i => i.id !== id));
+    try {
+      await deleteRoadmapItem(id);
+      toast.info(`"${item?.title}" removed.`);
+    } catch {
+      setItems(prev => [...prev, item]);
+      toast.error('Failed to remove milestone.');
     }
   };
 
@@ -90,6 +139,7 @@ export default function RoadmapPage() {
       <DashboardHeader title={t('roadmapTitle')} subtitle={t('roadmapSubtitle')} />
 
       <div className="p-6 space-y-6">
+
         {/* Progress overview */}
         {items.length > 0 && (
           <Card>
@@ -114,55 +164,74 @@ export default function RoadmapPage() {
           </Card>
         )}
 
-        {/* Filter tabs */}
-        <div className={cn('flex gap-2', isRTL ? 'flex-row-reverse' : '')}>
-          {(['all', 'pending', 'completed'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                'px-4 py-1.5 rounded-full text-sm font-medium capitalize transition-colors',
-                filter === f ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-              )}
-            >
-              {f === 'all' ? t('all') : f}
-            </button>
-          ))}
+        {/* Toolbar */}
+        <div className={cn('flex items-center justify-between gap-4 flex-wrap', isRTL ? 'flex-row-reverse' : '')}>
+          <div className={cn('flex gap-2', isRTL ? 'flex-row-reverse' : '')}>
+            {(['all', 'pending', 'completed'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={cn(
+                  'px-4 py-1.5 rounded-full text-sm font-medium capitalize transition-colors',
+                  filter === f ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                {f === 'all' ? t('all') : f}
+              </button>
+            ))}
+          </div>
+          <Button onClick={() => setModalOpen(true)} size="sm">
+            <Plus size={15} /> Add Milestone
+          </Button>
         </div>
 
         {/* Roadmap items */}
         <div className="space-y-3">
           {items.length === 0 ? (
-            <EmptyState
-              icon={<CheckCircle size={32} />}
-              title="No roadmap items yet"
-              description="Your mentor or admin will add personalized milestones to guide your career journey."
-            />
+            /* Empty state with CTA */
+            <Card className="text-center py-12">
+              <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Zap size={28} className="text-primary-500" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Your roadmap is empty</h3>
+              <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+                Add your career milestones — skills to learn, courses to complete, certifications to earn.
+              </p>
+              <Button onClick={() => setModalOpen(true)}>
+                <Plus size={16} /> Add First Milestone
+              </Button>
+            </Card>
           ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={<CheckCircle size={32} />}
-              title={filter === 'completed' ? 'No completed milestones yet' : 'All milestones completed!'}
-              description={filter === 'completed' ? 'Start checking off your roadmap items.' : 'Great work — all pending items are done!'}
-            />
+            <div className="text-center py-10 text-gray-400">
+              <CheckCircle size={32} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm">
+                {filter === 'completed' ? 'No completed milestones yet.' : 'All milestones completed! 🎉'}
+              </p>
+            </div>
           ) : (
             filtered.map((item) => (
-              <Card key={item.id} className={cn('transition-all', item.completed && 'opacity-70')}>
+              <Card key={item.id} className={cn('transition-all', item.completed && 'opacity-60')}>
                 <div className={cn('flex items-start gap-4', isRTL ? 'flex-row-reverse' : '')}>
+                  {/* Toggle button */}
                   <button
                     onClick={() => toggleComplete(item.id)}
-                    className={cn('mt-0.5 flex-shrink-0 transition-colors', item.completed ? 'text-green-500' : 'text-gray-300 hover:text-primary-500')}
+                    className={cn(
+                      'mt-0.5 flex-shrink-0 transition-colors',
+                      item.completed ? 'text-green-500' : 'text-gray-300 hover:text-primary-500'
+                    )}
+                    title={item.completed ? 'Mark as pending' : 'Mark as complete'}
                   >
                     {item.completed ? <CheckCircle size={22} /> : <Circle size={22} />}
                   </button>
 
                   <div className="flex-1 min-w-0">
                     <div className={cn('flex flex-wrap items-center gap-2 mb-1.5', isRTL ? 'flex-row-reverse' : '')}>
-                      <h3 className={cn('font-semibold text-gray-900', item.completed && 'line-through text-gray-500')}>
+                      <h3 className={cn('font-semibold text-gray-900', item.completed && 'line-through text-gray-400')}>
                         {item.title}
                       </h3>
                       {item.priority && (
                         <Badge variant={priorityVariant(item.priority)}>
-                          {item.priority} priority
+                          {item.priority}
                         </Badge>
                       )}
                       {item.category && (
@@ -176,8 +245,7 @@ export default function RoadmapPage() {
                     )}
                     {item.estimated_time && (
                       <div className={cn('flex items-center gap-1 text-xs text-gray-400', isRTL ? 'flex-row-reverse' : '')}>
-                        <Clock size={12} />
-                        Est. {item.estimated_time}
+                        <Clock size={12} /> Est. {item.estimated_time}
                       </div>
                     )}
                     {item.resources && item.resources.length > 0 && (
@@ -189,17 +257,91 @@ export default function RoadmapPage() {
                     )}
                   </div>
 
-                  {!item.completed && (
-                    <Button size="sm" variant="outline" onClick={() => toggleComplete(item.id)}>
-                      {t('markComplete')}
-                    </Button>
-                  )}
+                  <div className={cn('flex items-center gap-2 flex-shrink-0', isRTL ? 'flex-row-reverse' : '')}>
+                    {!item.completed && (
+                      <Button size="sm" variant="outline" onClick={() => toggleComplete(item.id)}>
+                        {t('markComplete')}
+                      </Button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                      title="Remove milestone"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
               </Card>
             ))
           )}
         </div>
+
       </div>
+
+      {/* Add Milestone Modal */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => { setModalOpen(false); setForm({ ...EMPTY_FORM }); }}
+        title="Add Milestone"
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => { setModalOpen(false); setForm({ ...EMPTY_FORM }); }}>
+              {t('cancel')}
+            </Button>
+            <Button onClick={handleAdd} loading={saving} disabled={!form.title.trim()}>
+              <Plus size={15} /> Add Milestone
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input
+            label="Title *"
+            value={form.title}
+            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            placeholder="e.g. Learn React, Get AWS certification..."
+            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+          />
+          <Textarea
+            label="Description"
+            value={form.description}
+            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+            rows={2}
+            placeholder="Describe what this milestone involves..."
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label="Category"
+              value={form.category}
+              onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+              options={[
+                { value: 'skill', label: '⚡ Skill' },
+                { value: 'course', label: '📚 Course' },
+                { value: 'certification', label: '🏆 Certification' },
+                { value: 'experience', label: '💼 Experience' },
+              ]}
+            />
+            <Select
+              label="Priority"
+              value={form.priority}
+              onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
+              options={[
+                { value: 'high', label: '🔴 High' },
+                { value: 'medium', label: '🟡 Medium' },
+                { value: 'low', label: '🟢 Low' },
+              ]}
+            />
+          </div>
+          <Input
+            label="Estimated Time"
+            value={form.estimated_time}
+            onChange={e => setForm(f => ({ ...f, estimated_time: e.target.value }))}
+            placeholder="e.g. 2 weeks, 3 months..."
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

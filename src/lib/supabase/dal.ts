@@ -230,6 +230,17 @@ export async function toggleRoadmapItem(id: string, completed: boolean) {
   if (error) throw error;
 }
 
+export async function addRoadmapItem(item: Record<string, unknown>) {
+  const { data, error } = await (sb().from('roadmap_items') as any).insert(item).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteRoadmapItem(id: string) {
+  const { error } = await sb().from('roadmap_items').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ── Notifications ───────────────────────────────────────────
 
 export async function getNotifications(userId: string) {
