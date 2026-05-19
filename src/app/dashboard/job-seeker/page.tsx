@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   TrendingUp, FileText, Map, Users, BookOpen, CheckCircle,
-  Clock, ArrowRight, AlertCircle, Star,
+  Clock, ArrowRight, AlertCircle, Star, X,
 } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 export default function JobSeekerDashboardPage() {
   const { t, isRTL } = useLang();
   const { user } = useAuth();
+  const [showBanner, setShowBanner] = useState(true);
 
   const employabilityScore = 72;
   const profileCompletion = 78;
@@ -44,19 +45,28 @@ export default function JobSeekerDashboardPage() {
       />
 
       <div className="p-6 space-y-6">
-        {/* Incomplete assessment alert */}
-        <div className={cn('flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm', isRTL ? 'flex-row-reverse' : '')}>
-          <AlertCircle size={18} className="text-amber-600 flex-shrink-0" />
-          <div className="flex-1">
-            <span className="font-medium text-amber-800">Complete your career assessment</span>
-            <span className="text-amber-700 ms-1">to unlock your full employability score and personalized roadmap.</span>
+        {/* Incomplete assessment alert — dismissible */}
+        {showBanner && (
+          <div className={cn('relative flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm', isRTL ? 'flex-row-reverse' : '')}>
+            <AlertCircle size={18} className="text-amber-600 flex-shrink-0" />
+            <div className="flex-1">
+              <span className="font-medium text-amber-800">Complete your career assessment</span>
+              <span className="text-amber-700 ms-1">to unlock your full employability score and personalized roadmap.</span>
+            </div>
+            <Link href="/dashboard/job-seeker/assessment">
+              <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white border-0">
+                Start Now
+              </Button>
+            </Link>
+            <button
+              onClick={() => setShowBanner(false)}
+              className="absolute top-2 end-2 p-1 text-amber-500 hover:text-amber-700 rounded-lg hover:bg-amber-100 transition-colors"
+              aria-label="Dismiss"
+            >
+              <X size={14} />
+            </button>
           </div>
-          <Link href="/dashboard/job-seeker/assessment">
-            <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white border-0">
-              Start Now
-            </Button>
-          </Link>
-        </div>
+        )}
 
         {/* Stats row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
