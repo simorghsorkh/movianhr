@@ -64,7 +64,7 @@ function getNavItems(role: UserRole, t: (k: any) => string): NavItem[] {
 }
 
 export function DashboardSidebar() {
-  const { t, lang, setLang } = useLang();
+  const { t, lang, setLang, isRTL } = useLang();
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -79,15 +79,15 @@ export function DashboardSidebar() {
     router.push('/');
   };
 
-  /**
-   * Nav row class — uses Tailwind `rtl:` CSS variant (works because root <html dir="rtl">).
-   * `flex-row-reverse` in RTL puts the icon (first DOM child) on the RIGHT,
-   * and the label on the LEFT — exactly what we want for a right-side sidebar.
+  /*
+   * RTL row layout:
+   *   - flex-row-reverse  → icon (first in DOM) appears visually on the RIGHT
+   *   - text-right        → text is right-aligned
    */
   const rowClass = (active?: boolean) =>
     cn(
       'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-      'rtl:flex-row-reverse',
+      isRTL ? 'flex-row-reverse' : '',
       active
         ? 'bg-primary-50 text-primary-700 font-semibold'
         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -98,7 +98,7 @@ export function DashboardSidebar() {
 
       {/* ── Logo ── */}
       <div className="px-4 py-5 border-b border-gray-100">
-        <Link href="/" className="flex items-center gap-2 rtl:flex-row-reverse">
+        <Link href="/" className={cn('flex items-center gap-2', isRTL ? 'flex-row-reverse' : '')}>
           <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">M</span>
           </div>
@@ -110,9 +110,9 @@ export function DashboardSidebar() {
 
       {/* ── User info ── */}
       <div className="px-4 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-3 rtl:flex-row-reverse">
+        <div className={cn('flex items-center gap-3', isRTL ? 'flex-row-reverse' : '')}>
           <Avatar src={user.avatar} name={user.name} size="md" />
-          <div className="flex-1 min-w-0 rtl:text-right">
+          <div className={cn('flex-1 min-w-0', isRTL ? 'text-right' : '')}>
             <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
             <p className="text-xs text-gray-500 truncate">{user.email}</p>
           </div>
@@ -130,17 +130,17 @@ export function DashboardSidebar() {
               onClick={() => setMobileOpen(false)}
               className={rowClass(isActive)}
             >
-              {/* Icon — first DOM child; rtl:flex-row-reverse moves it visually to the right */}
+              {/* Icon — first DOM child; flex-row-reverse moves it to the RIGHT in RTL */}
               <span className={cn('flex-shrink-0', isActive ? 'text-primary-600' : 'text-gray-400')}>
                 {item.icon}
               </span>
 
-              {/* Label — fills remaining space, right-aligned in RTL */}
-              <span className="flex-1 truncate rtl:text-right ltr:text-left">
+              {/* Label */}
+              <span className={cn('flex-1 truncate', isRTL ? 'text-right' : 'text-left')}>
                 {item.label}
               </span>
 
-              {/* Active dot — visually at the far end */}
+              {/* Active dot */}
               {isActive && (
                 <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary-600" />
               )}
@@ -162,7 +162,7 @@ export function DashboardSidebar() {
             size={18}
             className={cn('flex-shrink-0', pathname === '/dashboard/settings' ? 'text-primary-600' : 'text-gray-400')}
           />
-          <span className="flex-1 rtl:text-right ltr:text-left">{t('settings')}</span>
+          <span className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>{t('settings')}</span>
         </Link>
 
         {/* Language toggle */}
@@ -171,7 +171,7 @@ export function DashboardSidebar() {
           className={rowClass()}
         >
           <Globe size={18} className="text-gray-400 flex-shrink-0" />
-          <span className="flex-1 rtl:text-right ltr:text-left">
+          <span className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>
             {lang === 'fa' ? 'Switch to English' : 'تغییر به فارسی'}
           </span>
         </button>
@@ -179,10 +179,13 @@ export function DashboardSidebar() {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-red-600 hover:bg-red-50 rtl:flex-row-reverse"
+          className={cn(
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-red-600 hover:bg-red-50',
+            isRTL ? 'flex-row-reverse' : ''
+          )}
         >
           <LogOut size={18} className="flex-shrink-0" />
-          <span className="flex-1 rtl:text-right ltr:text-left">{t('logout')}</span>
+          <span className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>{t('logout')}</span>
         </button>
       </div>
     </div>
@@ -191,28 +194,36 @@ export function DashboardSidebar() {
   return (
     <>
       {/*
-        Desktop sidebar.
-        The parent layout uses `rtl:flex-row-reverse`, which visually moves the
-        sidebar (first DOM child) to the RIGHT side of the screen in RTL/Persian mode.
-        `border-e` uses logical property — becomes border-left in RTL (inner edge).
-      */}
-      <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 bg-white border-e border-gray-100 h-screen sticky top-0">
+       * Desktop sidebar — sits naturally on the RIGHT because it's the
+       * SECOND flex child in layout.tsx (content is first).
+       * border-s = logical "start" border → becomes border-right in RTL
+       * which is the inner edge between sidebar and content.
+       */}
+      <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 bg-white border-s border-gray-100 h-screen sticky top-0">
         <SidebarContent />
       </aside>
 
-      {/* Mobile toggle button — right side in RTL */}
+      {/* Mobile toggle — bottom-right corner in RTL */}
       <button
-        className="lg:hidden fixed bottom-4 z-50 p-3 bg-primary-600 text-white rounded-full shadow-lg rtl:right-4 ltr:left-4"
+        className={cn(
+          'lg:hidden fixed bottom-4 z-50 p-3 bg-primary-600 text-white rounded-full shadow-lg',
+          isRTL ? 'right-4' : 'left-4'
+        )}
         onClick={() => setMobileOpen(!mobileOpen)}
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Mobile drawer — slides in from the right in RTL */}
+      {/* Mobile drawer — slides from the right in RTL */}
       {mobileOpen && (
         <>
           <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="lg:hidden fixed top-0 bottom-0 z-50 w-64 bg-white shadow-xl flex flex-col rtl:right-0 ltr:left-0">
+          <aside
+            className={cn(
+              'lg:hidden fixed top-0 bottom-0 z-50 w-64 bg-white shadow-xl flex flex-col',
+              isRTL ? 'right-0' : 'left-0'
+            )}
+          >
             <SidebarContent />
           </aside>
         </>
