@@ -3,10 +3,13 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLang } from '@/contexts/LanguageContext';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
+import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
+  const { isRTL } = useLang();
   const router = useRouter();
 
   useEffect(() => {
@@ -29,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className={cn('flex min-h-screen bg-gray-50', isRTL ? 'flex-row-reverse' : '')}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {children}

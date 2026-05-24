@@ -20,10 +20,10 @@ import {
   getMyRequests, getMyEnrollments, getJobSeekerProfile,
   getApprovedMentors, getPublishedCourses,
 } from '@/lib/supabase/dal';
-import { cn } from '@/lib/utils';
+import { cn, toPersianNum } from '@/lib/utils';
 
 export default function JobSeekerDashboardPage() {
-  const { t, isRTL } = useLang();
+  const { t, lang, isRTL } = useLang();
   const { user } = useAuth();
   const [showBanner, setShowBanner] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -96,25 +96,29 @@ export default function JobSeekerDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title={t('employabilityScore')}
-            value={employabilityScore ? `${employabilityScore}/100` : 'Not taken'}
+            value={employabilityScore
+              ? (lang === 'fa' ? `${toPersianNum(employabilityScore)}/۱۰۰` : `${employabilityScore}/100`)
+              : (lang === 'fa' ? 'انجام نشده' : 'Not taken')}
             icon={<TrendingUp size={20} />}
             color="blue"
           />
           <StatCard
             title={t('profileCompletion')}
-            value={`${jsProfile ? 85 : 40}%`}
+            value={lang === 'fa'
+              ? `${toPersianNum(jsProfile ? 85 : 40)}٪`
+              : `${jsProfile ? 85 : 40}%`}
             icon={<CheckCircle size={20} />}
             color="green"
           />
           <StatCard
-            title="Requests Sent"
-            value={String(requests.length)}
+            title={lang === 'fa' ? 'درخواست‌های ارسال‌شده' : 'Requests Sent'}
+            value={lang === 'fa' ? toPersianNum(requests.length) : String(requests.length)}
             icon={<Users size={20} />}
             color="amber"
           />
           <StatCard
-            title="Courses Enrolled"
-            value={String(enrollments.length)}
+            title={lang === 'fa' ? 'دوره‌های ثبت‌نام‌شده' : 'Courses Enrolled'}
+            value={lang === 'fa' ? toPersianNum(enrollments.length) : String(enrollments.length)}
             icon={<BookOpen size={20} />}
             color="purple"
           />

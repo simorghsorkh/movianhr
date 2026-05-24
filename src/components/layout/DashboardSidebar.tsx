@@ -99,7 +99,7 @@ export function DashboardSidebar() {
       <div className="px-4 py-4 border-b border-gray-100">
         <div className={cn('flex items-center gap-3', isRTL ? 'flex-row-reverse' : '')}>
           <Avatar src={user.avatar} name={user.name} size="md" />
-          <div className="flex-1 min-w-0">
+          <div className={cn('flex-1 min-w-0', isRTL ? 'text-right' : '')}>
             <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
             <p className="text-xs text-gray-500 truncate">{user.email}</p>
           </div>
@@ -116,7 +116,7 @@ export function DashboardSidebar() {
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                 isRTL ? 'flex-row-reverse' : '',
                 isActive
                   ? 'bg-primary-50 text-primary-700 font-semibold'
@@ -126,9 +126,11 @@ export function DashboardSidebar() {
               <span className={cn('flex-shrink-0', isActive ? 'text-primary-600' : 'text-gray-400')}>
                 {item.icon}
               </span>
-              <span className="truncate">{item.label}</span>
+              <span className={cn('flex-1 truncate', isRTL ? 'text-right' : 'text-left')}>
+                {item.label}
+              </span>
               {isActive && (
-                <div className={cn('ms-auto w-1.5 h-1.5 rounded-full bg-primary-600', isRTL ? 'me-auto ms-0' : '')} />
+                <div className={cn('flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary-600', isRTL ? 'ml-0' : 'mr-0')} />
               )}
             </Link>
           );
@@ -149,21 +151,23 @@ export function DashboardSidebar() {
           )}
         >
           <Settings size={18} className={cn('flex-shrink-0', pathname === '/dashboard/settings' ? 'text-primary-600' : 'text-gray-400')} />
-          <span>{t('settings')}</span>
+          <span className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>{t('settings')}</span>
         </Link>
         <button
           onClick={() => setLang(lang === 'fa' ? 'en' : 'fa')}
           className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors', isRTL ? 'flex-row-reverse' : '')}
         >
           <Globe size={18} className="text-gray-400 flex-shrink-0" />
-          <span>{lang === 'fa' ? 'Switch to English' : 'تغییر به فارسی'}</span>
+          <span className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>
+            {lang === 'fa' ? 'Switch to English' : 'تغییر به فارسی'}
+          </span>
         </button>
         <button
           onClick={handleLogout}
           className={cn('w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors', isRTL ? 'flex-row-reverse' : '')}
         >
           <LogOut size={18} className="flex-shrink-0" />
-          <span>{t('logout')}</span>
+          <span className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>{t('logout')}</span>
         </button>
       </div>
     </div>

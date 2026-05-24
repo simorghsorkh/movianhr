@@ -48,3 +48,8 @@ export function truncate(str: string, length: number): string {
 export function generateId(): string {
   return Math.random().toString(36).slice(2, 11);
 }
+
+/** Convert Western digits 0-9 to Persian/Eastern-Arabic digits ۰-۹ */
+export function toPersianNum(n: number | string): string {
+  return String(n).replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[+d]);
+}
