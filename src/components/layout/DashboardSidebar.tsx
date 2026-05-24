@@ -205,8 +205,6 @@ export function DashboardSidebar() {
       >
         <SidebarContent />
       </aside>
-      {/* Spacer so content doesn't go under the fixed sidebar */}
-      <div style={{ width: '240px', flexShrink: 0 }} className="hidden lg:block" />
 
       {/* Mobile toggle — bottom-right corner in RTL */}
       <button
