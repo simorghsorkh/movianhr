@@ -196,7 +196,20 @@ export function DashboardSidebar() {
        * which is the inner edge between sidebar and content.
        */}
       <aside
-        style={{ position: 'fixed', top: 0, right: 0, height: '100vh', width: '240px', zIndex: 30, display: 'flex', flexDirection: 'column', backgroundColor: '#ffffff', borderLeft: '1px solid #f3f4f6' }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: isRTL ? 0 : 'auto',
+          left: isRTL ? 'auto' : 0,
+          height: '100vh',
+          width: '240px',
+          zIndex: 30,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#ffffff',
+          borderLeft: isRTL ? '1px solid #f3f4f6' : 'none',
+          borderRight: isRTL ? 'none' : '1px solid #f3f4f6',
+        }}
         className="hidden lg:flex"
       >
         <SidebarContent />
