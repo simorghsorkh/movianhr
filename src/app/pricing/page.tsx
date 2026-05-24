@@ -12,68 +12,75 @@ import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 
 export default function PricingPage() {
-  const { t, isRTL } = useLang();
+  const { t, lang, isRTL } = useLang();
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+
+  const fa = lang === 'fa';
 
   const plans = [
     {
       name: t('planFree'),
       priceMonthly: 0,
       priceYearly: 0,
-      description: 'Perfect for getting started with career assessment.',
+      description: fa ? 'برای شروع ارزیابی مسیر شغلی‌تان ایده‌آل است.' : 'Perfect for getting started with career assessment.',
       color: 'border-gray-200',
       buttonVariant: 'outline' as const,
       features: [
-        { label: 'Basic profile creation', included: true },
-        { label: 'Career assessment (1x)', included: true },
-        { label: 'View 5 mentor profiles', included: true },
-        { label: 'Access to free courses', included: true },
-        { label: 'CV builder (1 template)', included: true },
-        { label: 'Mentor consultation requests', included: false },
-        { label: 'Personalized roadmap', included: false },
-        { label: 'Priority support', included: false },
+        { label: fa ? 'ایجاد پروفایل پایه' : 'Basic profile creation', included: true },
+        { label: fa ? 'ارزیابی شغلی (۱ بار)' : 'Career assessment (1x)', included: true },
+        { label: fa ? 'مشاهده ۵ پروفایل منتور' : 'View 5 mentor profiles', included: true },
+        { label: fa ? 'دسترسی به دوره‌های رایگان' : 'Access to free courses', included: true },
+        { label: fa ? 'ساخت رزومه (۱ قالب)' : 'CV builder (1 template)', included: true },
+        { label: fa ? 'درخواست مشاوره از منتور' : 'Mentor consultation requests', included: false },
+        { label: fa ? 'نقشه راه شخصی‌سازی شده' : 'Personalized roadmap', included: false },
+        { label: fa ? 'پشتیبانی اولویت‌دار' : 'Priority support', included: false },
       ],
     },
     {
       name: t('planPro'),
       priceMonthly: 299000,
       priceYearly: 249000,
-      description: 'For serious job seekers who want full career support.',
+      description: fa ? 'برای جویندگان کار جدی که به حمایت کامل شغلی نیاز دارند.' : 'For serious job seekers who want full career support.',
       color: 'border-primary-500',
       popular: true,
       buttonVariant: 'primary' as const,
       features: [
-        { label: 'Everything in Free', included: true },
-        { label: 'Unlimited career assessments', included: true },
-        { label: 'Full mentor directory access', included: true },
-        { label: 'Unlimited consultation requests', included: true },
-        { label: 'Personalized career roadmap', included: true },
-        { label: 'CV builder (all templates)', included: true },
-        { label: 'Course enrollment discounts', included: true },
-        { label: 'Priority support', included: true },
+        { label: fa ? 'همه امکانات پلان رایگان' : 'Everything in Free', included: true },
+        { label: fa ? 'ارزیابی شغلی نامحدود' : 'Unlimited career assessments', included: true },
+        { label: fa ? 'دسترسی کامل به فهرست منتورها' : 'Full mentor directory access', included: true },
+        { label: fa ? 'درخواست مشاوره نامحدود' : 'Unlimited consultation requests', included: true },
+        { label: fa ? 'نقشه راه شغلی شخصی‌سازی شده' : 'Personalized career roadmap', included: true },
+        { label: fa ? 'ساخت رزومه (همه قالب‌ها)' : 'CV builder (all templates)', included: true },
+        { label: fa ? 'تخفیف ثبت‌نام در دوره‌ها' : 'Course enrollment discounts', included: true },
+        { label: fa ? 'پشتیبانی اولویت‌دار' : 'Priority support', included: true },
       ],
     },
     {
       name: t('planEnterprise'),
       priceMonthly: null,
       priceYearly: null,
-      description: 'For teams and organizations hiring at scale.',
+      description: fa ? 'برای تیم‌ها و سازمان‌هایی که در مقیاس بزرگ استخدام می‌کنند.' : 'For teams and organizations hiring at scale.',
       color: 'border-gray-200',
       buttonVariant: 'outline' as const,
       features: [
-        { label: 'Everything in Professional', included: true },
-        { label: 'Team accounts (up to 50)', included: true },
-        { label: 'Dedicated account manager', included: true },
-        { label: 'Custom training programs', included: true },
-        { label: 'API access', included: true },
-        { label: 'Analytics dashboard', included: true },
-        { label: 'SLA guarantee', included: true },
-        { label: 'White-labeling options', included: true },
+        { label: fa ? 'همه امکانات پلان حرفه‌ای' : 'Everything in Professional', included: true },
+        { label: fa ? 'حساب تیمی (تا ۵۰ نفر)' : 'Team accounts (up to 50)', included: true },
+        { label: fa ? 'مدیر حساب اختصاصی' : 'Dedicated account manager', included: true },
+        { label: fa ? 'برنامه‌های آموزشی سفارشی' : 'Custom training programs', included: true },
+        { label: fa ? 'دسترسی به API' : 'API access', included: true },
+        { label: fa ? 'داشبورد تحلیلی' : 'Analytics dashboard', included: true },
+        { label: fa ? 'تضمین SLA' : 'SLA guarantee', included: true },
+        { label: fa ? 'قابلیت برندسازی سفارشی' : 'White-labeling options', included: true },
       ],
     },
   ];
 
-  const faq = [
+  const faq = fa ? [
+    { q: 'آیا می‌توانم هر زمان لغو کنم؟', a: 'بله. اشتراک خود را در هر زمان بدون جریمه لغو کنید. تا پایان دوره صورت‌حساب دسترسی شما حفظ می‌شود.' },
+    { q: 'آیا دوره آزمایشی رایگان وجود دارد؟', a: 'بله! پلان رایگان دسترسی کامل به امکانات اصلی را برای همیشه می‌دهد. فقط زمانی ارتقا دهید که به امکانات بیشتری نیاز دارید.' },
+    { q: 'صورت‌حساب منتور چگونه کار می‌کند؟', a: 'منتورها نرخ خود را تعیین می‌کنند. موویان ۱۵٪ کارمزد پلتفرم از جلسات موفق دریافت می‌کند.' },
+    { q: 'آیا دوره‌ها در قیمت گنجانده شده‌اند؟', a: 'مشترکان پلان حرفه‌ای ۲۰٪ تخفیف روی همه دوره‌ها می‌گیرند. کاربران رایگان قیمت کامل را پرداخت می‌کنند.' },
+  ] : [
     { q: 'Can I cancel anytime?', a: 'Yes. Cancel your subscription at any time with no penalties. You keep access until the end of your billing period.' },
     { q: 'Is there a free trial?', a: 'Yes! The Free plan gives you full access to core features indefinitely. Upgrade only when you need more.' },
     { q: 'How does mentor billing work?', a: 'Mentors set their own rates. Movian charges a 15% platform fee on successful sessions.' },
@@ -96,13 +103,13 @@ export default function PricingPage() {
                 onClick={() => setBilling('monthly')}
                 className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-colors', billing === 'monthly' ? 'bg-white text-primary-700' : 'text-white/70 hover:text-white')}
               >
-                Monthly
+                {fa ? 'ماهانه' : 'Monthly'}
               </button>
               <button
                 onClick={() => setBilling('yearly')}
                 className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2', billing === 'yearly' ? 'bg-white text-primary-700' : 'text-white/70 hover:text-white')}
               >
-                Yearly
+                {fa ? 'سالانه' : 'Yearly'}
                 <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">-17%</span>
               </button>
             </div>
@@ -126,13 +133,13 @@ export default function PricingPage() {
                     </div>
                   )}
                   <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{plan.name}</h3>
-                    <p className="text-sm text-gray-600 mb-4">{plan.description}</p>
+                    <h3 className={cn('text-xl font-bold text-gray-900 mb-1', isRTL ? 'text-right' : '')}>{plan.name}</h3>
+                    <p className={cn('text-sm text-gray-600 mb-4', isRTL ? 'text-right' : '')}>{plan.description}</p>
                     <div className="flex items-baseline gap-1">
                       {plan.priceMonthly === null ? (
-                        <span className="text-2xl font-bold text-gray-900">Custom</span>
+                        <span className="text-2xl font-bold text-gray-900">{fa ? 'سفارشی' : 'Custom'}</span>
                       ) : plan.priceMonthly === 0 ? (
-                        <span className="text-3xl font-bold text-gray-900">Free</span>
+                        <span className="text-3xl font-bold text-gray-900">{fa ? 'رایگان' : 'Free'}</span>
                       ) : (
                         <>
                           <span className="text-3xl font-bold text-gray-900">
@@ -169,12 +176,14 @@ export default function PricingPage() {
         {/* FAQ */}
         <section className="py-16 bg-white">
           <div className="max-w-3xl mx-auto px-4">
-            <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Frequently Asked Questions</h2>
+            <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">
+            {fa ? 'سوالات متداول' : 'Frequently Asked Questions'}
+          </h2>
             <div className="space-y-4">
               {faq.map((item) => (
                 <Card key={item.q} padding="md">
-                  <h3 className="font-semibold text-gray-900 mb-2">{item.q}</h3>
-                  <p className="text-sm text-gray-600">{item.a}</p>
+                  <h3 className={cn('font-semibold text-gray-900 mb-2', isRTL ? 'text-right' : '')}>{item.q}</h3>
+                  <p className={cn('text-sm text-gray-600', isRTL ? 'text-right' : '')}>{item.a}</p>
                 </Card>
               ))}
             </div>
