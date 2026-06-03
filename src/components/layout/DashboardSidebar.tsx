@@ -30,7 +30,7 @@ function getNavItems(role: UserRole, t: (k: any) => string): NavItem[] {
       { href: '/dashboard/job-seeker/roadmap',       label: t('myRoadmap'),           icon: <Map size={18} /> },
       { href: '/dashboard/job-seeker/mentors',       label: t('findMentors'),         icon: <Users size={18} /> },
       { href: '/dashboard/job-seeker/courses',       label: t('discoverCourses'),     icon: <BookOpen size={18} /> },
-      { href: '/dashboard/job-seeker/linkedin',      label: lang === 'fa' ? 'لینکدین' : 'LinkedIn', icon: <Linkedin size={18} /> },
+      { href: '/dashboard/job-seeker/linkedin',      label: 'LinkedIn',                icon: <Linkedin size={18} /> },
       { href: '/dashboard/job-seeker/requests',      label: t('myRequests'),          icon: <MessageSquare size={18} /> },
     ];
   }

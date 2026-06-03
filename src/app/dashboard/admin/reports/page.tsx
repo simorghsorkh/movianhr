@@ -22,6 +22,8 @@ export default function AdminReportsPage() {
 
   const maxUsers = Math.max(...monthlyData.map(d => d.users));
 
+  const adminStats = { totalUsers: 341, monthlyGrowth: 18 };
+
   return (
     <div className="flex-1 overflow-y-auto">
       <DashboardHeader title={t('systemReports')} subtitle="Platform analytics and growth metrics." />
