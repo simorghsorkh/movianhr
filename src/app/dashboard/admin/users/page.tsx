@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Search, UserCheck, UserX, RefreshCw, Shield, X, CheckSquare, Square } from 'lucide-react';
+import { Search, UserCheck, UserX, RefreshCw, Shield, CheckSquare, Square, ChevronDown, AlertTriangle } from 'lucide-react';
 import {
   TrendingUp, FileText, Map, Users, BookOpen,
   MessageSquare, ClipboardList, Linkedin,
@@ -66,6 +66,12 @@ export default function AdminUsersPage() {
   const [accessModal, setAccessModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
 
+  // Role change modal
+  const [roleModal, setRoleModal] = useState(false);
+  const [roleUser, setRoleUser] = useState<UserRow | null>(null);
+  const [newRole, setNewRole] = useState('');
+  const [roleLoading, setRoleLoading] = useState(false);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -98,6 +104,31 @@ export default function AdminUsersPage() {
   const openAccessModal = (user: UserRow) => {
     setSelectedUser(user);
     setAccessModal(true);
+  };
+
+  const openRoleModal = (user: UserRow) => {
+    setRoleUser(user);
+    setNewRole(user.role);
+    setRoleModal(true);
+  };
+
+  const changeRole = async () => {
+    if (!roleUser || newRole === roleUser.role) return;
+    setRoleLoading(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: newRole })
+      .eq('id', roleUser.id);
+    if (error) {
+      toast.error(fa ? 'تغییر نقش ناموفق بود.' : 'Failed to change role.');
+    } else {
+      toast.success(fa
+        ? `نقش ${roleUser.name} به "${roleLabels[newRole] ?? newRole}" تغییر یافت.`
+        : `${roleUser.name}'s role changed to "${newRole}".`);
+      setUsers(prev => prev.map(u => u.id === roleUser.id ? { ...u, role: newRole } : u));
+      setRoleModal(false);
+    }
+    setRoleLoading(false);
   };
 
   const filtered = users.filter(u => {
@@ -197,13 +228,23 @@ export default function AdminUsersPage() {
                             </div>
                           </div>
                         </td>
-                        {/* Role */}
+                        {/* Role — clickable to change */}
                         <td className="px-4 py-3">
-                          <Badge variant={ROLE_COLORS[user.role] as any ?? 'default'}>
-                            {fa
-                              ? roleLabels[user.role] ?? user.role
-                              : user.role.replace('-', ' ')}
-                          </Badge>
+                          <button
+                            onClick={() => user.role !== 'admin' && openRoleModal(user)}
+                            disabled={user.role === 'admin'}
+                            title={user.role === 'admin' ? (fa ? 'نقش ادمین قابل تغییر نیست' : 'Admin role cannot be changed') : (fa ? 'تغییر نقش' : 'Change role')}
+                            className={cn(
+                              'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-all',
+                              user.role !== 'admin' && 'hover:ring-2 hover:ring-offset-1 hover:ring-primary-400 cursor-pointer',
+                              user.role === 'admin' && 'cursor-not-allowed opacity-70'
+                            )}
+                          >
+                            <Badge variant={ROLE_COLORS[user.role] as any ?? 'default'}>
+                              {fa ? roleLabels[user.role] ?? user.role : user.role.replace('-', ' ')}
+                            </Badge>
+                            {user.role !== 'admin' && <ChevronDown size={11} className="text-gray-400 -ml-0.5" />}
+                          </button>
                         </td>
                         {/* Approval */}
                         <td className="px-4 py-3">
@@ -273,6 +314,94 @@ export default function AdminUsersPage() {
           </div>
         </Card>
       </div>
+
+      {/* ── Role Change Modal ── */}
+      {roleUser && (
+        <Modal
+          isOpen={roleModal}
+          onClose={() => setRoleModal(false)}
+          title={fa ? `تغییر نقش — ${roleUser.name}` : `Change Role — ${roleUser.name}`}
+          size="sm"
+          footer={
+            <div className={cn('flex gap-2', isRTL ? 'flex-row-reverse' : '')}>
+              <Button variant="outline" onClick={() => setRoleModal(false)}>
+                {fa ? 'انصراف' : 'Cancel'}
+              </Button>
+              <Button
+                onClick={changeRole}
+                loading={roleLoading}
+                disabled={newRole === roleUser.role}
+              >
+                {fa ? 'ذخیره تغییر' : 'Save Change'}
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            {/* Current role */}
+            <div className={cn('flex items-center gap-3 p-3 bg-gray-50 rounded-xl', isRTL ? 'flex-row-reverse' : '')}>
+              <Avatar name={roleUser.name} src={roleUser.avatar ?? undefined} size="sm" />
+              <div className={isRTL ? 'text-right' : ''}>
+                <p className="text-sm font-semibold text-gray-900">{roleUser.name}</p>
+                <p className="text-xs text-gray-500">{roleUser.email}</p>
+              </div>
+            </div>
+
+            {/* Role selector */}
+            <div className="space-y-2">
+              <label className={cn('text-sm font-medium text-gray-700 block', isRTL ? 'text-right' : '')}>
+                {fa ? 'نقش جدید را انتخاب کنید:' : 'Select new role:'}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {(['job-seeker', 'mentor', 'trainer', 'admin'] as const).map(role => {
+                  const colors: Record<string, string> = {
+                    'job-seeker': 'border-blue-200 bg-blue-50 text-blue-700',
+                    mentor:       'border-orange-200 bg-orange-50 text-orange-700',
+                    trainer:      'border-green-200 bg-green-50 text-green-700',
+                    admin:        'border-red-200 bg-red-50 text-red-700',
+                  };
+                  const selected = newRole === role;
+                  return (
+                    <button
+                      key={role}
+                      onClick={() => setNewRole(role)}
+                      className={cn(
+                        'flex flex-col items-center gap-1 p-3 rounded-xl border-2 text-xs font-semibold transition-all',
+                        selected
+                          ? `${colors[role]} ring-2 ring-offset-1 ring-primary-400`
+                          : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                      )}
+                    >
+                      <span className="text-base">
+                        {role === 'job-seeker' ? '🎯' : role === 'mentor' ? '🧑‍💼' : role === 'trainer' ? '🎓' : '🛡️'}
+                      </span>
+                      {fa ? roleLabels[role] : role.replace('-', ' ')}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Warning if changing to admin */}
+            {newRole === 'admin' && newRole !== roleUser.role && (
+              <div className={cn('flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700', isRTL ? 'flex-row-reverse text-right' : '')}>
+                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                {fa
+                  ? 'این کاربر دسترسی کامل ادمین خواهد داشت. این تصمیم را با دقت انجام دهید.'
+                  : 'This user will have full admin access. Proceed with caution.'}
+              </div>
+            )}
+
+            {newRole !== roleUser.role && (
+              <p className={cn('text-xs text-gray-400', isRTL ? 'text-right' : '')}>
+                {fa
+                  ? `نقش از "${roleLabels[roleUser.role]}" به "${roleLabels[newRole] ?? newRole}" تغییر خواهد یافت.`
+                  : `Role will change from "${roleUser.role}" to "${newRole}".`}
+              </p>
+            )}
+          </div>
+        </Modal>
+      )}
 
       {/* ── Feature Access Modal ── */}
       {selectedUser && (
