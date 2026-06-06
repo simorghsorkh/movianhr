@@ -5,11 +5,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 /* ─────────────────────────── Types ─────────────────────────── */
 
 export interface SiteStats {
-  /** e.g. "1,500+" — job seekers count */
   stat1: string;
-  /** e.g. "180+" — expert mentors */
   stat2: string;
-  /** e.g. "90+" — courses */
   stat3: string;
 }
 
@@ -21,7 +18,28 @@ export interface Testimonial {
   roleFa: string;
   text: string;
   textFa: string;
-  rating: number; // 1–5
+  rating: number;
+}
+
+export interface PlanFeature {
+  id: string;
+  label: string;
+  labelFa: string;
+  included: boolean;
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  nameFa: string;
+  /** null = "Custom / Contact us" */
+  priceMonthly: number | null;
+  priceYearly: number | null;
+  description: string;
+  descriptionFa: string;
+  popular: boolean;
+  highlighted: boolean; // thicker border / scale-up
+  features: PlanFeature[];
 }
 
 /* ───────────────────────── Defaults ────────────────────────── */
@@ -35,47 +53,101 @@ export const DEFAULT_STATS: SiteStats = {
 export const DEFAULT_TESTIMONIALS: Testimonial[] = [
   {
     id: '1',
-    name: 'Sara Ahmadi',
-    nameFa: 'سارا احمدی',
-    role: 'Marketing Manager',
-    roleFa: 'مدیر بازاریابی',
+    name: 'Sara Ahmadi', nameFa: 'سارا احمدی',
+    role: 'Marketing Manager', roleFa: 'مدیر بازاریابی',
     text: 'Movian completely changed how I approach my career. The assessment gave me clarity and the roadmap kept me on track.',
     textFa: 'موویان کاملاً نگاه من به مسیر شغلی‌ام را تغییر داد. ارزیابی به من شفافیت داد و نقشه راه مرا در مسیر درست نگه داشت.',
     rating: 5,
   },
   {
     id: '2',
-    name: 'Ali Rezaei',
-    nameFa: 'علی رضایی',
-    role: 'Software Engineer',
-    roleFa: 'مهندس نرم‌افزار',
+    name: 'Ali Rezaei', nameFa: 'علی رضایی',
+    role: 'Software Engineer', roleFa: 'مهندس نرم‌افزار',
     text: 'The mentor I connected with through Movian helped me land a senior role in 3 months. Incredible platform.',
     textFa: 'منتوری که از طریق موویان با او آشنا شدم کمک کرد در ۳ ماه به یک موقعیت ارشد برسم. پلتفرم فوق‌العاده‌ای است.',
     rating: 5,
   },
   {
     id: '3',
-    name: 'Maryam Tehrani',
-    nameFa: 'مریم تهرانی',
-    role: 'Product Designer',
-    roleFa: 'طراح محصول',
+    name: 'Maryam Tehrani', nameFa: 'مریم تهرانی',
+    role: 'Product Designer', roleFa: 'طراح محصول',
     text: "I was stuck in my career for 2 years. After using Movian's roadmap and taking 2 courses, I finally made the leap.",
     textFa: 'دو سال در مسیر شغلی‌ام گیر کرده بودم. بعد از استفاده از نقشه راه موویان و گذراندن ۲ دوره، بالاخره جهش کردم.',
     rating: 5,
   },
 ];
 
+export const DEFAULT_PLANS: Plan[] = [
+  {
+    id: 'free',
+    name: 'Free', nameFa: 'رایگان',
+    priceMonthly: 0, priceYearly: 0,
+    description: 'Perfect for getting started with career assessment.',
+    descriptionFa: 'برای شروع ارزیابی مسیر شغلی‌تان ایده‌آل است.',
+    popular: false, highlighted: false,
+    features: [
+      { id: 'f1', label: 'Basic profile creation',           labelFa: 'ایجاد پروفایل پایه',               included: true  },
+      { id: 'f2', label: 'Career assessment (1x)',           labelFa: 'ارزیابی شغلی (۱ بار)',              included: true  },
+      { id: 'f3', label: 'View 5 mentor profiles',          labelFa: 'مشاهده ۵ پروفایل منتور',           included: true  },
+      { id: 'f4', label: 'Access to free courses',          labelFa: 'دسترسی به دوره‌های رایگان',        included: true  },
+      { id: 'f5', label: 'CV builder (1 template)',          labelFa: 'ساخت رزومه (۱ قالب)',               included: true  },
+      { id: 'f6', label: 'Mentor consultation requests',    labelFa: 'درخواست مشاوره از منتور',          included: false },
+      { id: 'f7', label: 'Personalized roadmap',            labelFa: 'نقشه راه شخصی‌سازی شده',          included: false },
+      { id: 'f8', label: 'Priority support',                labelFa: 'پشتیبانی اولویت‌دار',             included: false },
+    ],
+  },
+  {
+    id: 'pro',
+    name: 'Professional', nameFa: 'حرفه‌ای',
+    priceMonthly: 299000, priceYearly: 249000,
+    description: 'For serious job seekers who want full career support.',
+    descriptionFa: 'برای جویندگان کار جدی که به حمایت کامل شغلی نیاز دارند.',
+    popular: true, highlighted: true,
+    features: [
+      { id: 'p1', label: 'Everything in Free',              labelFa: 'همه امکانات پلان رایگان',          included: true },
+      { id: 'p2', label: 'Unlimited career assessments',    labelFa: 'ارزیابی شغلی نامحدود',             included: true },
+      { id: 'p3', label: 'Full mentor directory access',    labelFa: 'دسترسی کامل به فهرست منتورها',     included: true },
+      { id: 'p4', label: 'Unlimited consultation requests', labelFa: 'درخواست مشاوره نامحدود',           included: true },
+      { id: 'p5', label: 'Personalized career roadmap',     labelFa: 'نقشه راه شغلی شخصی‌سازی شده',     included: true },
+      { id: 'p6', label: 'CV builder (all templates)',      labelFa: 'ساخت رزومه (همه قالب‌ها)',         included: true },
+      { id: 'p7', label: 'Course enrollment discounts',     labelFa: 'تخفیف ثبت‌نام در دوره‌ها',        included: true },
+      { id: 'p8', label: 'Priority support',                labelFa: 'پشتیبانی اولویت‌دار',             included: true },
+    ],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise', nameFa: 'سازمانی',
+    priceMonthly: null, priceYearly: null,
+    description: 'For teams and organizations hiring at scale.',
+    descriptionFa: 'برای تیم‌ها و سازمان‌هایی که در مقیاس بزرگ استخدام می‌کنند.',
+    popular: false, highlighted: false,
+    features: [
+      { id: 'e1', label: 'Everything in Professional',      labelFa: 'همه امکانات پلان حرفه‌ای',        included: true },
+      { id: 'e2', label: 'Team accounts (up to 50)',        labelFa: 'حساب تیمی (تا ۵۰ نفر)',            included: true },
+      { id: 'e3', label: 'Dedicated account manager',       labelFa: 'مدیر حساب اختصاصی',              included: true },
+      { id: 'e4', label: 'Custom training programs',        labelFa: 'برنامه‌های آموزشی سفارشی',        included: true },
+      { id: 'e5', label: 'API access',                      labelFa: 'دسترسی به API',                    included: true },
+      { id: 'e6', label: 'Analytics dashboard',             labelFa: 'داشبورد تحلیلی',                  included: true },
+      { id: 'e7', label: 'SLA guarantee',                   labelFa: 'تضمین SLA',                       included: true },
+      { id: 'e8', label: 'White-labeling options',          labelFa: 'قابلیت برندسازی سفارشی',          included: true },
+    ],
+  },
+];
+
 /* ──────────────────────── Context type ─────────────────────── */
 
 interface SiteStatsContextType {
-  // Stats
   stats: SiteStats;
   setStats: (stats: SiteStats) => void;
   resetStats: () => void;
-  // Testimonials
+
   testimonials: Testimonial[];
   setTestimonials: (items: Testimonial[]) => void;
   resetTestimonials: () => void;
+
+  plans: Plan[];
+  setPlans: (plans: Plan[]) => void;
+  resetPlans: () => void;
 }
 
 /* ──────────────────────── Provider ─────────────────────────── */
@@ -84,46 +156,48 @@ const SiteStatsContext = createContext<SiteStatsContextType | undefined>(undefin
 
 const STATS_KEY        = 'movian-site-stats';
 const TESTIMONIALS_KEY = 'movian-testimonials';
+const PLANS_KEY        = 'movian-plans';
 
 export function SiteStatsProvider({ children }: { children: ReactNode }) {
-  const [stats, setStatsState] = useState<SiteStats>(DEFAULT_STATS);
+  const [stats,        setStatsState]        = useState<SiteStats>(DEFAULT_STATS);
   const [testimonials, setTestimonialsState] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
+  const [plans,        setPlansState]        = useState<Plan[]>(DEFAULT_PLANS);
 
-  // Load from localStorage on client
   useEffect(() => {
     try {
-      const savedStats = localStorage.getItem(STATS_KEY);
-      if (savedStats) setStatsState(JSON.parse(savedStats) as SiteStats);
+      const s = localStorage.getItem(STATS_KEY);
+      if (s) setStatsState(JSON.parse(s));
 
-      const savedTestimonials = localStorage.getItem(TESTIMONIALS_KEY);
-      if (savedTestimonials) setTestimonialsState(JSON.parse(savedTestimonials) as Testimonial[]);
-    } catch {
-      // Ignore storage errors
-    }
+      const t = localStorage.getItem(TESTIMONIALS_KEY);
+      if (t) setTestimonialsState(JSON.parse(t));
+
+      const p = localStorage.getItem(PLANS_KEY);
+      if (p) setPlansState(JSON.parse(p));
+    } catch { /* ignore */ }
   }, []);
 
-  const setStats = (newStats: SiteStats) => {
-    setStatsState(newStats);
-    try { localStorage.setItem(STATS_KEY, JSON.stringify(newStats)); } catch { /* noop */ }
+  const save = <T,>(key: string, val: T) => {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* ignore */ }
+  };
+  const remove = (key: string) => {
+    try { localStorage.removeItem(key); } catch { /* ignore */ }
   };
 
-  const resetStats = () => {
-    setStatsState(DEFAULT_STATS);
-    try { localStorage.removeItem(STATS_KEY); } catch { /* noop */ }
-  };
+  const setStats        = (v: SiteStats)      => { setStatsState(v);        save(STATS_KEY, v);        };
+  const resetStats      = ()                  => { setStatsState(DEFAULT_STATS);        remove(STATS_KEY);        };
 
-  const setTestimonials = (items: Testimonial[]) => {
-    setTestimonialsState(items);
-    try { localStorage.setItem(TESTIMONIALS_KEY, JSON.stringify(items)); } catch { /* noop */ }
-  };
+  const setTestimonials = (v: Testimonial[])  => { setTestimonialsState(v); save(TESTIMONIALS_KEY, v); };
+  const resetTestimonials = ()                => { setTestimonialsState(DEFAULT_TESTIMONIALS); remove(TESTIMONIALS_KEY); };
 
-  const resetTestimonials = () => {
-    setTestimonialsState(DEFAULT_TESTIMONIALS);
-    try { localStorage.removeItem(TESTIMONIALS_KEY); } catch { /* noop */ }
-  };
+  const setPlans        = (v: Plan[])         => { setPlansState(v);        save(PLANS_KEY, v);        };
+  const resetPlans      = ()                  => { setPlansState(DEFAULT_PLANS);        remove(PLANS_KEY);        };
 
   return (
-    <SiteStatsContext.Provider value={{ stats, setStats, resetStats, testimonials, setTestimonials, resetTestimonials }}>
+    <SiteStatsContext.Provider value={{
+      stats, setStats, resetStats,
+      testimonials, setTestimonials, resetTestimonials,
+      plans, setPlans, resetPlans,
+    }}>
       {children}
     </SiteStatsContext.Provider>
   );
