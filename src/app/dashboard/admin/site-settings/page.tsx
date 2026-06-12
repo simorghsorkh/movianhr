@@ -407,20 +407,34 @@ function PlansEditor({
                           </div>
                         ) : (
                           <div
-                            className={cn('flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer group', isRTL ? 'flex-row-reverse' : '')}
-                            onClick={() => setEditingFeatureId(`${plan.id}:${feat.id}`)}
+                            className={cn('flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 group', isRTL ? 'flex-row-reverse' : '')}
                           >
                             <CheckCircle
                               size={14}
                               className={cn('flex-shrink-0', feat.included ? 'text-green-500' : 'text-gray-300')}
                             />
-                            <span className={cn('text-sm text-gray-700 flex-1 truncate', isRTL ? 'text-right' : '')}>
+                            <span
+                              className={cn('text-sm text-gray-700 flex-1 truncate cursor-pointer', isRTL ? 'text-right' : '')}
+                              onClick={() => setEditingFeatureId(`${plan.id}:${feat.id}`)}
+                            >
                               {fa ? feat.labelFa : feat.label}
                             </span>
-                            <span className="text-xs text-gray-400 flex-shrink-0">
-                              {feat.price > 0 ? feat.price.toLocaleString() : ''}
-                            </span>
-                            <Pencil size={12} className="text-gray-300 group-hover:text-gray-500 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all" />
+                            <div className={cn('flex items-center gap-1 flex-shrink-0', isRTL ? 'flex-row-reverse' : '')}>
+                              <input
+                                type="number"
+                                min={0}
+                                value={feat.price}
+                                onChange={(e) => updateFeature(plan.id, feat.id, { price: Number(e.target.value) })}
+                                onClick={(e) => e.stopPropagation()}
+                                dir="ltr"
+                                title={fa ? 'قیمت این مورد (تومان)' : nl ? 'Prijs van dit item (Toman)' : 'Price of this item (Toman)'}
+                                className="w-24 border border-gray-200 rounded-lg px-2 py-1 text-xs text-right focus:outline-none focus:ring-2 focus:ring-primary-300"
+                              />
+                              <span className="text-xs text-gray-400">{fa ? 'تومان' : nl ? 'Toman' : 'Toman'}</span>
+                            </div>
+                            <button onClick={() => setEditingFeatureId(`${plan.id}:${feat.id}`)} className="flex-shrink-0">
+                              <Pencil size={12} className="text-gray-300 group-hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-all" />
+                            </button>
                           </div>
                         )}
                       </div>
