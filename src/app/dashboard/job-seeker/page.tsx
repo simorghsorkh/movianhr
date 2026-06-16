@@ -1,152 +1,97 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import {
-  TrendingUp, FileText, Map, Users, BookOpen,
-  MessageSquare, ClipboardList, Lock, Linkedin,
-} from 'lucide-react';
+import { Route, Package, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFeatureAccess } from '@/contexts/FeatureAccessContext';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { FEATURES } from '@/lib/features';
-import { getMyRequests, getMyEnrollments, getJobSeekerProfile } from '@/lib/supabase/dal';
-import { cn, toPersianNum } from '@/lib/utils';
-
-const ICON_MAP: Record<string, React.ReactNode> = {
-  assessment:   <ClipboardList size={32} />,
-  'cv-builder': <FileText size={32} />,
-  linkedin:     <Linkedin size={32} />,
-  roadmap:      <Map size={32} />,
-  mentors:      <Users size={32} />,
-  courses:      <BookOpen size={32} />,
-};
+import { cn } from '@/lib/utils';
 
 export default function JobSeekerDashboardPage() {
   const { lang, isRTL } = useLang();
   const { user } = useAuth();
-  const { hasAccess } = useFeatureAccess();
   const fa = lang === 'fa';
+  const nl = lang === 'nl';
 
-  const [loading, setLoading]         = useState(true);
-  const [requests, setRequests]       = useState<any[]>([]);
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [jsProfile, setJsProfile]     = useState<any>(null);
+  const ChevronEnd = isRTL ? ChevronLeft : ChevronRight;
 
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      getMyRequests(user.id),
-      getMyEnrollments(user.id),
-      getJobSeekerProfile(user.id),
-    ])
-      .then(([reqs, enrs, profile]) => {
-        setRequests(reqs);
-        setEnrollments(enrs);
-        setJsProfile(profile);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [user]);
-
-  const score = jsProfile?.employability_score ?? null;
+  const cards = [
+    {
+      href:    '/dashboard/job-seeker/journey',
+      icon:    <Route size={36} />,
+      bg:      'bg-blue-50',
+      iconBg:  'bg-blue-100 text-blue-600',
+      border:  'border-blue-100 hover:border-blue-300',
+      title:   fa ? 'مسیر من'    : nl ? 'Mijn traject'   : 'My Journey',
+      desc:    fa ? 'اپلای‌ها، مصاحبه‌ها و تقویم جلسات'
+                  : nl ? 'Sollicitaties, interviews en agenda'
+                  : 'Applications, interviews & scheduled sessions',
+    },
+    {
+      href:    '/dashboard/job-seeker/services',
+      icon:    <Package size={36} />,
+      bg:      'bg-emerald-50',
+      iconBg:  'bg-emerald-100 text-emerald-600',
+      border:  'border-emerald-100 hover:border-emerald-300',
+      title:   fa ? 'خدمات من'   : nl ? 'Mijn diensten'  : 'My Services',
+      desc:    fa ? 'خدمات فعال در پکیج شما'
+                  : nl ? 'Actieve diensten in uw pakket'
+                  : 'Active features included in your plan',
+    },
+    {
+      href:    '/dashboard/job-seeker/profile',
+      icon:    <User size={36} />,
+      bg:      'bg-violet-50',
+      iconBg:  'bg-violet-100 text-violet-600',
+      border:  'border-violet-100 hover:border-violet-300',
+      title:   fa ? 'پروفایل من' : nl ? 'Mijn profiel'   : 'My Profile',
+      desc:    fa ? 'اطلاعات شخصی و تکمیل پروفایل'
+                  : nl ? 'Persoonlijke informatie en profielstatus'
+                  : 'Personal information & profile completion',
+    },
+  ];
 
   return (
     <div className="flex-1 overflow-y-auto">
       <DashboardHeader
-        title={fa ? `خوش آمدید، ${user?.name?.split(' ')[0] ?? ''}!` : `Welcome, ${user?.name?.split(' ')[0] ?? 'there'}!`}
-        subtitle={fa ? 'ابزارهای شغلی خود را انتخاب کنید.' : 'Choose a career tool below.'}
+        title={
+          fa ? `خوش آمدید، ${user?.name?.split(' ')[0] ?? ''}!`
+             : `Welcome, ${user?.name?.split(' ')[0] ?? 'there'}!`
+        }
+        subtitle={
+          fa ? 'یکی از گزینه‌های زیر را انتخاب کنید.'
+             : nl ? 'Kies een van de opties hieronder.'
+             : 'Choose one of the options below.'
+        }
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 flex flex-col gap-4 max-w-xl mx-auto mt-4">
+        {cards.map((card) => (
+          <Link
+            key={card.href}
+            href={card.href}
+            className={cn(
+              'flex items-center gap-5 rounded-2xl border-2 px-6 py-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5',
+              card.bg, card.border,
+              isRTL ? 'flex-row-reverse' : ''
+            )}
+          >
+            {/* Icon */}
+            <div className={cn('w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0', card.iconBg)}>
+              {card.icon}
+            </div>
 
-        {/* ── Quick stats ── */}
-        <div className="grid grid-cols-3 gap-3">
-          {loading ? (
-            Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)
-          ) : (
-            <>
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl px-4 py-3 text-center">
-                <p className="text-xl font-bold text-blue-700">
-                  {score ? (fa ? `${toPersianNum(score)}/۱۰۰` : `${score}/100`) : '—'}
-                </p>
-                <p className="text-xs text-blue-500 mt-0.5">{fa ? 'امتیاز استخدام' : 'Score'}</p>
-              </div>
-              <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 text-center">
-                <p className="text-xl font-bold text-amber-700">
-                  {fa ? toPersianNum(requests.length) : requests.length}
-                </p>
-                <p className="text-xs text-amber-500 mt-0.5">{fa ? 'درخواست‌ها' : 'Requests'}</p>
-              </div>
-              <div className="bg-purple-50 border border-purple-100 rounded-2xl px-4 py-3 text-center">
-                <p className="text-xl font-bold text-purple-700">
-                  {fa ? toPersianNum(enrollments.length) : enrollments.length}
-                </p>
-                <p className="text-xs text-purple-500 mt-0.5">{fa ? 'دوره‌ها' : 'Courses'}</p>
-              </div>
-            </>
-          )}
-        </div>
+            {/* Text */}
+            <div className={cn('flex-1 min-w-0', isRTL ? 'text-right' : '')}>
+              <p className="text-lg font-bold text-gray-900 mb-1">{card.title}</p>
+              <p className="text-sm text-gray-500 leading-relaxed">{card.desc}</p>
+            </div>
 
-        {/* ── Feature grid ── */}
-        <div>
-          <h2 className={cn('text-sm font-semibold text-gray-400 mb-4', isRTL ? 'text-right' : '')}>
-            {fa ? 'ابزارهای شما' : 'Your Tools'}
-          </h2>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {FEATURES.map((feature) => {
-              const accessible = user ? hasAccess(user.id, feature.key) : true;
-              const label = fa ? feature.labelFa : feature.labelEn;
-              const desc  = fa ? feature.descFa  : feature.descEn;
-
-              const card = (
-                <div
-                  className={cn(
-                    'relative flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all duration-200 text-center',
-                    feature.border,
-                    accessible
-                      ? 'bg-white hover:shadow-lg hover:-translate-y-1 cursor-pointer'
-                      : 'bg-gray-50 border-gray-100 cursor-not-allowed opacity-50'
-                  )}
-                >
-                  {!accessible && (
-                    <div className="absolute top-3 end-3">
-                      <Lock size={13} className="text-gray-400" />
-                    </div>
-                  )}
-
-                  <div className={cn(
-                    'w-16 h-16 rounded-2xl flex items-center justify-center',
-                    accessible ? feature.color : 'bg-gray-100 text-gray-300'
-                  )}>
-                    {ICON_MAP[feature.key]}
-                  </div>
-
-                  <div>
-                    <p className={cn('text-sm font-bold', accessible ? 'text-gray-900' : 'text-gray-400')}>
-                      {label}
-                    </p>
-                    <p className={cn('text-xs mt-0.5 leading-relaxed', accessible ? 'text-gray-500' : 'text-gray-300')}>
-                      {accessible ? desc : (fa ? 'دسترسی محدود' : 'Restricted')}
-                    </p>
-                  </div>
-                </div>
-              );
-
-              return accessible ? (
-                <Link key={feature.key} href={feature.href}>
-                  {card}
-                </Link>
-              ) : (
-                <div key={feature.key}>{card}</div>
-              );
-            })}
-          </div>
-        </div>
-
+            {/* Arrow */}
+            <ChevronEnd size={22} className="flex-shrink-0 text-gray-300" />
+          </Link>
+        ))}
       </div>
     </div>
   );
